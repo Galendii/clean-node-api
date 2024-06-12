@@ -1,9 +1,17 @@
+import { InvalidParamError } from '../errors/invalid-param-error'
 import { MissingParamError } from '../errors/missing-param-error'
 import { badRequest } from '../helpers/http-helper'
 import { Controller } from '../protocols/controller'
+import { EmailValidation } from '../protocols/email-validation'
 import { HttpRequest, HttpResponse } from '../protocols/http'
 
 export class SignUpController implements Controller {
+  constructor (
+    private readonly emailValidation: EmailValidation
+  ) {
+
+  }
+
   handle (httpRequest: HttpRequest): HttpResponse {
     if (!httpRequest.body.name) {
       return badRequest(new MissingParamError('name'))
@@ -16,8 +24,10 @@ export class SignUpController implements Controller {
         return badRequest(new MissingParamError(field))
       }
     }
-    return {
-      statusCode: 500
+    if (!this.emailValidation.isValid(`${httpRequest.body.email}`)) {
+      return badRequest(new InvalidParamError('email'))
     }
+
+    return { statusCode: 200 }
   }
 }
