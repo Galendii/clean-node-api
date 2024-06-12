@@ -109,4 +109,23 @@ describe('SignUp Controller', () => {
     sut.handle(httpRequest)
     expect(isValidSpy).toHaveBeenCalledWith('any_email@test.com')
   })
+  test('should return 500 if EmailValidation throws', () => {
+    class EmailValidationStubSpy {
+      isValid (email: string): boolean {
+        throw new Error()
+      }
+    }
+    const emailValidationStub = new EmailValidationStubSpy()
+    const sut = new SignUpController(emailValidationStub)
+    const httpRequest = {
+      body: {
+        email: 'any_email@test.com',
+        name: 'any_name',
+        password: 'any_password',
+        passwordConfirmation: 'any_password'
+      }
+    }
+    const httpResponse = sut.handle(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+  })
 })
