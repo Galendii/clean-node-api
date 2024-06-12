@@ -2,10 +2,22 @@ import { InvalidParamError, MissingParamError, ServerError } from '../errors'
 import { EmailValidation } from '../protocols/email-validation'
 import { SignUpController } from './signup'
 
-class EmailValidationStub {
-  isValid (email: string): boolean {
-    return true
+const makeEmailValidationStub = (): EmailValidation => {
+  class EmailValidationStub {
+    isValid (email: string): boolean {
+      return true
+    }
   }
+  return new EmailValidationStub()
+}
+
+const makeEmailValidationStubWithError = (): EmailValidation => {
+  class EmailValidationStub {
+    isValid (email: string): boolean {
+      throw new Error()
+    }
+  }
+  return new EmailValidationStub()
 }
 
 interface SutTypes {
@@ -14,7 +26,7 @@ interface SutTypes {
 }
 
 const makeSut = (): SutTypes => {
-  const emailValidationStub = new EmailValidationStub()
+  const emailValidationStub = makeEmailValidationStub()
   const sut = new SignUpController(emailValidationStub)
   return {
     sut,
@@ -109,12 +121,7 @@ describe('SignUp Controller', () => {
     expect(isValidSpy).toHaveBeenCalledWith('any_email@test.com')
   })
   test('should return 500 if EmailValidation throws', () => {
-    class EmailValidationStubSpy {
-      isValid (email: string): boolean {
-        throw new Error()
-      }
-    }
-    const emailValidationStub = new EmailValidationStubSpy()
+    const emailValidationStub = makeEmailValidationStubWithError()
     const sut = new SignUpController(emailValidationStub)
     const httpRequest = {
       body: {
